@@ -1,0 +1,5 @@
+{
+  "name": "Catalyst",
+  "description": "A conceptual application that allows users to build a custom, plugin-based application from a blank slate by interacting with an AI agent. The agent develops and integrates new plugins based on user requests, demonstrating a future of infinitely customizable software.",
+  "requestFramePermissions": []
+}
