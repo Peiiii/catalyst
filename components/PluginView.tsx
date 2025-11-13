@@ -1,85 +1,50 @@
-import React, { useState, useMemo, Component, ErrorInfo, ReactNode } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Plugin } from '../types';
 import { getIcon } from './icons';
 
-// --- ErrorBoundary Component (merged) ---
-interface EBProps {
-  children: ReactNode;
-}
-interface EBState {
-  hasError: boolean;
-  error: Error | null;
-}
-class ErrorBoundary extends Component<EBProps, EBState> {
-  public state: EBState;
-
-  constructor(props: EBProps) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  public static getDerivedStateFromError(error: Error): EBState {
-    return { hasError: true, error };
-  }
-
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error in generated component:", error, errorInfo);
-  }
-
-  public render() {
-    if (this.state.hasError) {
-      return (
-        <div className="bg-red-900/20 border border-red-500 text-red-300 p-4 rounded-md">
-          <h3 className="font-bold mb-2">Plugin Runtime Error</h3>
-          <p className="text-sm mb-2">There was an error rendering this plugin's component.</p>
-          <pre className="text-xs bg-slate-900 p-2 rounded overflow-x-auto">
-            <code>{this.state.error?.toString()}</code>
-          </pre>
-        </div>
-      );
-    }
-    // Fix: Using constructor for state initialization to resolve issue where this.props was not recognized.
-    return this.props.children;
-  }
-}
-
-// --- PluginRuntime Component (merged) ---
+// --- PluginRuntime Component ---
+// This component safely executes the plugin's generated JavaScript code.
 const PluginRuntime: React.FC<{ code?: string }> = ({ code }) => {
-  const Component = useMemo(() => {
-    if (!code) return null;
-    try {
-      const componentNameMatch = code.match(/const\s+([A-Z][a-zA-Z0-9]+)\s*=/);
-      if (!componentNameMatch || !componentNameMatch[1]) {
-        throw new Error("Could not find a valid component name. Expected format: 'const ComponentName = ...'");
-      }
-      const componentName = componentNameMatch[1];
-      const factory = new Function('React', `${code}; return ${componentName};`);
-      return factory(React);
-    } catch (e: any) {
-      console.error("Error creating component from code:", e);
-      return () => (
-        <div className="bg-red-900/20 border border-red-500 text-red-300 p-4 rounded-md">
-          <h3 className="font-bold mb-2">Plugin Compilation Error</h3>
-          <p className="text-sm mb-2">The generated code could not be compiled into a component.</p>
-          <pre className="text-xs bg-slate-900 p-2 rounded overflow-x-auto">
-            <code>{e.message}</code>
-          </pre>
-        </div>
-      );
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    
+    // Clear previous content before running new code
+    container.innerHTML = '';
+
+    if (!code) {
+      container.innerHTML = '<p class="text-slate-500 p-4">No source code available to render.</p>';
+      return;
     }
-  }, [code]);
 
-  if (!Component) {
-    return <div className="text-slate-500">No source code available to render.</div>;
-  }
+    try {
+      // 'eval' is used here to execute the string containing the function definition.
+      // This is the core of the dynamic plugin execution.
+      const renderer = eval(code);
 
-  return (
-    <ErrorBoundary>
-      <div className="p-4 bg-slate-900/50 border border-slate-700 rounded-lg">
-        <Component />
-      </div>
-    </ErrorBoundary>
-  );
+      if (typeof renderer === 'function') {
+        // If the code string evaluated to a function, call it with the container element.
+        renderer(container);
+      } else {
+        throw new Error('Generated code did not evaluate to a function.');
+      }
+    } catch (e: any) {
+      console.error("Error executing plugin code:", e);
+      // Display a user-friendly error message inside the container if the code fails.
+      container.innerHTML = `
+        <div class="p-4 m-4 bg-red-900/20 border border-red-500 text-red-300 rounded-md">
+          <h3 class="font-bold mb-2">Plugin Execution Error</h3>
+          <p class="text-sm mb-2">The generated code failed to run.</p>
+          <pre class="text-xs bg-slate-900 p-2 rounded overflow-x-auto whitespace-pre-wrap"><code>${e.message}</code></pre>
+        </div>
+      `;
+    }
+  }, [code]); // Re-run this effect whenever the plugin code changes
+
+  // The ref is attached to this div, which becomes the container for the plugin's UI.
+  return <div ref={containerRef} className="w-full h-full min-h-[400px] bg-slate-900/50 border border-slate-700 rounded-lg overflow-auto" />;
 };
 
 // --- CodeBlock Component ---
@@ -98,6 +63,11 @@ interface PluginViewProps {
 
 const PluginView: React.FC<PluginViewProps> = ({ plugin }) => {
   const [activeTab, setActiveTab] = useState<'runtime' | 'details' | 'api' | 'code'>('runtime');
+
+  useEffect(() => {
+    // Reset to the runtime tab whenever a new plugin is selected
+    setActiveTab('runtime');
+  }, [plugin]);
 
   if (!plugin) {
     return <div className="text-slate-500">Plugin not found.</div>;

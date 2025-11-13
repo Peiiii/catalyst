@@ -1,3 +1,4 @@
+
 export interface Plugin {
   id: string;
   name: string;
@@ -6,6 +7,11 @@ export interface Plugin {
   color: string;
   generatedCode?: string;
   apiEndpoints?: { path: string; description: string; }[];
+  customView?: {
+    id: string;
+    name: string;
+    icon: string;
+  };
 }
 
 export interface ChatMessage {

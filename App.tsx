@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import AIAssistantPanel from './components/AIAssistantPanel';
 import MainPanel from './components/MainPanel';
@@ -139,7 +140,7 @@ const App: React.FC = () => {
             sender: 'agent',
             text: `Here is the source code for the new '${plan.newPlugin.name}' plugin. I've opened its detail page for you.`,
             code: {
-              language: 'tsx',
+              language: 'javascript',
               content: plan.newPlugin.generatedCode,
             }
           });
@@ -167,7 +168,7 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-800 text-white overflow-hidden">
-      <ActivityBar activeView={activeView} onSetActiveView={handleActivityBarClick} />
+      <ActivityBar activeView={activeView} onSetActiveView={handleActivityBarClick} plugins={plugins} />
       {isSidebarOpen && <Sidebar activeView={activeView} plugins={plugins} onSelectPlugin={handleSelectPlugin} />}
       <div className="flex flex-col flex-1 min-w-0"> {/* min-w-0 is crucial for flexbox to allow shrinking */}
         <MainPanel
