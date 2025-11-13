@@ -58,7 +58,7 @@ const agentPlanSchema = {
         },
         generatedCode: {
           type: Type.STRING,
-          description: "The full React/TSX source code for the plugin component. It must be a single, self-contained component. Use inline styles or basic HTML elements. The root element should be a div. Ensure the UI is clean, modern, and fits the dark theme.",
+          description: "The full React/TSX source code for the plugin component. It must be a single, self-contained component definition (e.g., 'const MyComponent = () => ...;'). The UI must be clean, modern, and fit the application's dark theme. It should be functional; for example, a to-do list should manage its own state for adding/completing tasks.",
         },
         apiEndpoints: {
           type: Type.ARRAY,
@@ -115,28 +115,6 @@ Your primary task is to decide the user's intent and set the 'action' field acco
 - You MUST provide a complete \`plan\` object. The \`plan\` object must contain ALL its required fields: \`initialChatReply\`, \`tasks\`, \`logsForTasks\`, \`finalChatReply\`, and \`newPlugin\`.
 - DO NOT use the top-level \`chatReply\` field.
 
-**Example BUILD Response:**
-\`\`\`json
-{
-  "action": "BUILD",
-  "plan": {
-    "initialChatReply": "Okay, I'll start creating a to-do list plugin for you.",
-    "tasks": [{"description": "Generate TSX code for the component"}],
-    "logsForTasks": [[{"text": "Code generation complete.", "status": "success"}]],
-    "finalChatReply": "I've finished the to-do list plugin. You can access it from the sidebar.",
-    "newPlugin": {
-        "id": "plugin-placeholder",
-        "name": "To-Do List",
-        "icon": "TaskIcon",
-        "description": "A simple plugin to track tasks.",
-        "color": "bg-green-500",
-        "generatedCode": "const TodoList = () => { return <div>My Todo List</div>; };",
-        "apiEndpoints": []
-    }
-  }
-}
-\`\`\`
-
 ---
 
 ### 2. CHAT Action
@@ -152,21 +130,15 @@ Your primary task is to decide the user's intent and set the 'action' field acco
 - You MUST provide a conversational reply in the top-level \`chatReply\` field.
 - DO NOT use the \`plan\` field.
 
-**Example CHAT Response:**
-\`\`\`json
-{
-  "action": "CHAT",
-  "chatReply": "Hello! What can I build for you today? For example, you could ask me to 'build a simple calculator'."
-}
-\`\`\`
-
 ---
 
 **Constraints for 'newPlugin.generatedCode':**
-- The code must be a single, valid TSX React functional component.
+- The code must be a single, valid TSX React functional component defined as a const (e.g., \`const MyNotes = () => { ... };\`).
 - The component must be self-contained. Do not assume any external state or props.
-- Use only standard React hooks like useState, useEffect.
-- For styling, use inline styles (\`style={{}}\`) or standard HTML elements. Do not use CSS classes. Ensure the UI is clean, modern, and fits the dark theme of the application.
+- Use only standard React hooks like \`useState\` and \`useEffect\`.
+- For styling, use inline styles (\`style={{}}\`) or standard HTML elements. Do not use CSS classes.
+- Ensure the UI is clean, modern, and fits the dark theme of the application. Use dark backgrounds (e.g., \`#1E293B\`), light text (e.g., \`#E2E8F0\`), and accent colors (e.g., \`#38BDF8\`).
+- The component must be fully functional. For instance, a to-do list should have its own state and logic for adding, deleting, and marking tasks as complete.
 - Do not import any external libraries.
 - The root component must be a \`<div>\`.
 

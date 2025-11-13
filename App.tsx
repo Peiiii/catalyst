@@ -137,7 +137,7 @@ const App: React.FC = () => {
         if (plan.newPlugin.generatedCode) {
           addChatMessage({
             sender: 'agent',
-            text: `Here is the source code for the new '${plan.newPlugin.name}' plugin.`,
+            text: `Here is the source code for the new '${plan.newPlugin.name}' plugin. I've opened its detail page for you.`,
             code: {
               language: 'tsx',
               content: plan.newPlugin.generatedCode,
